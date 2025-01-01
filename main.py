@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-import json
+import json, os
 
 
 def obter_links_musicas(playlist_url):
@@ -79,9 +79,21 @@ def obtercompositor(soup):
         return compositor
     return None
 
-def salvar_em_json(musicas, arquivo='musicas.json'):
+
+def salvar_em_json(musicas, cantor, arquivo='cantores/{cantor}.json'):
+    # Substituir espaços por underline e converter para caixa baixa no nome do cantor
+    cantor_formatado = cantor.replace(" ", "_").lower()
+
+    # Criar o diretório para o cantor, se não existir
+    diretorio = 'cantores'
+    if not os.path.exists(diretorio):
+        os.makedirs(diretorio)
+
+    # Substituir o marcador {cantor} pelo nome do cantor formatado
+    caminho_arquivo = arquivo.format(cantor=cantor_formatado)
+
     # Salvar as músicas extraídas em um arquivo JSON
-    with open(arquivo, 'w', encoding='utf-8') as f:
+    with open(caminho_arquivo, 'w', encoding='utf-8') as f:
         json.dump(musicas, f, ensure_ascii=False, indent=4)
 
 
@@ -90,14 +102,25 @@ def main():
     links_musicas = obter_links_musicas(playlist_url)
 
     musicas = []
+    cantor_atual = None
     for i, musica_url in enumerate(links_musicas, 1):  # Inicia o ID da música em 1 e incrementa
         musica = obter_dados_musica(musica_url, i)
         if musica:
+            if cantor_atual != musica['cantor']:
+                # Salvar músicas anteriores antes de mudar de cantor
+                if musicas:
+                    salvar_em_json(musicas, cantor_atual)
+
+                # Limpar a lista de músicas e atualizar cantor atual
+                musicas = []
+                cantor_atual = musica['cantor']
+
             musicas.append(musica)
 
+    # Salvar as últimas músicas
     if musicas:
-        salvar_em_json(musicas)
-        print(f'{len(musicas)} músicas foram salvas em musicas.json.')
+        salvar_em_json(musicas, cantor_atual)
+        print(f'{len(musicas)} músicas de {cantor_atual} foram salvas em {cantor_atual}.json.')
     else:
         print("Nenhuma música foi salva.")
 
