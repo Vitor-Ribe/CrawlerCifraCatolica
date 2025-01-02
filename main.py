@@ -60,6 +60,7 @@ def obter_dados_musica(musica_url, id_musica):
     letra = letra.replace("<br>", "\n")
 
     compositor = obtercompositor(soup)
+    cantor_formatado = cantor.replace(" ", "_").lower()
 
     musica = {
         'id': id_musica,
@@ -67,7 +68,8 @@ def obter_dados_musica(musica_url, id_musica):
         'cantor': cantor,
         'letra': letra.strip(),  # Remove possíveis quebras extras no final
         'compositor': compositor,
-        'categoria': 'None'  # Ajuste conforme necessário para o seu app
+        'categoria': 'None',  # Ajuste conforme necessário para o seu app
+        'image': cantor_formatado
     }
 
     return musica
